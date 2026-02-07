@@ -33,18 +33,25 @@ const AdminProducts = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const filePath = `products/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("uploads").upload(filePath, file);
-    if (error) {
-      toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `products/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("uploads").upload(filePath, file);
+      if (error) {
+        console.error("Upload error:", error);
+        toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(filePath);
+      setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+      toast({ title: "Imagem enviada!" });
+    } catch (err) {
+      console.error("Upload exception:", err);
+      toast({ title: "Erro inesperado no upload", variant: "destructive" });
+    } finally {
       setUploading(false);
-      return;
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-    const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(filePath);
-    setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
-    setUploading(false);
-    toast({ title: "Imagem enviada!" });
   };
 
   const fetchProducts = async () => {
