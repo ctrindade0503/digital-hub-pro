@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Package, Image, Layers, Rss, Users, Settings, ChevronLeft, Shield, Paintbrush, ShieldCheck } from "lucide-react";
+import { Package, Image, Layers, Rss, Users, Settings, ChevronLeft, Shield, Paintbrush, ShieldCheck, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { path: "/admin/feed", icon: Rss, label: "Feed" },
   { path: "/admin/users", icon: Users, label: "Usuários" },
   { path: "/admin/moderation", icon: ShieldCheck, label: "Moderação" },
+  { path: "/admin/notifications", icon: Bell, label: "Notificações" },
   { path: "/admin/colors", icon: Paintbrush, label: "Cores" },
   { path: "/admin/settings", icon: Settings, label: "Config." },
 ];
