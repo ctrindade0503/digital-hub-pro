@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-interface Module { id: string; title: string; sort_order: number; image_url: string | null; }
+interface Module { id: string; title: string; sort_order: number; image_url: string | null; show_order: boolean; }
 interface ModuleContent { id: string; module_id: string; type: string; title: string; url: string | null; content: string | null; sort_order: number; }
 
 const contentTypeIcons: Record<string, typeof FileText> = { pdf: FileText, video: Video, link: LinkIcon, text: Type, app: AppWindow };
@@ -18,7 +18,7 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
   const [modDialogOpen, setModDialogOpen] = useState(false);
   const [contentDialogOpen, setContentDialogOpen] = useState(false);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
-  const [modForm, setModForm] = useState({ title: "", sort_order: 0, image_url: "" });
+  const [modForm, setModForm] = useState({ title: "", sort_order: 0, image_url: "", show_order: true });
   const [contentForm, setContentForm] = useState({ title: "", type: "text", url: "", content: "" });
   const [editMod, setEditMod] = useState<Module | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -92,13 +92,13 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
   useEffect(() => { fetchData(); }, [productId]);
 
   const saveModule = async () => {
-    const payload = { title: modForm.title, sort_order: modForm.sort_order, image_url: modForm.image_url || null, product_id: productId };
+    const payload = { title: modForm.title, sort_order: modForm.sort_order, image_url: modForm.image_url || null, show_order: modForm.show_order, product_id: productId };
     if (editMod) {
-      await supabase.from("modules").update({ title: modForm.title, sort_order: modForm.sort_order, image_url: modForm.image_url || null }).eq("id", editMod.id);
+      await supabase.from("modules").update({ title: modForm.title, sort_order: modForm.sort_order, image_url: modForm.image_url || null, show_order: modForm.show_order }).eq("id", editMod.id);
     } else {
       await supabase.from("modules").insert(payload);
     }
-    setModDialogOpen(false); setEditMod(null); setModForm({ title: "", sort_order: 0, image_url: "" });
+    setModDialogOpen(false); setEditMod(null); setModForm({ title: "", sort_order: 0, image_url: "", show_order: true });
     toast({ title: "Módulo salvo" }); fetchData();
   };
 
@@ -129,7 +129,7 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
         <h2 className="text-lg font-bold text-foreground">Módulos</h2>
       </div>
 
-      <Dialog open={modDialogOpen} onOpenChange={(o) => { setModDialogOpen(o); if (!o) { setEditMod(null); setModForm({ title: "", sort_order: 0, image_url: "" }); } }}>
+      <Dialog open={modDialogOpen} onOpenChange={(o) => { setModDialogOpen(o); if (!o) { setEditMod(null); setModForm({ title: "", sort_order: 0, image_url: "", show_order: true }); } }}>
         <DialogTrigger asChild>
           <Button size="sm" className="gap-1 mb-4"><Plus className="w-4 h-4" />Novo Módulo</Button>
         </DialogTrigger>
@@ -138,7 +138,11 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
           <div className="space-y-3">
             <Input placeholder="Título" value={modForm.title} onChange={(e) => setModForm({ ...modForm, title: e.target.value })} />
             <Input type="number" placeholder="Ordem" value={modForm.sort_order} onChange={(e) => setModForm({ ...modForm, sort_order: Number(e.target.value) })} />
-            
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input type="checkbox" checked={modForm.show_order} onChange={(e) => setModForm({ ...modForm, show_order: e.target.checked })} className="rounded" />
+              Exibir número do módulo
+            </label>
+
             {/* Image upload */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Imagem do módulo</label>
@@ -169,7 +173,7 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
           <div className="flex items-center gap-2 bg-card rounded-xl border border-border p-3">
             {mod.image_url && <img src={mod.image_url} alt={mod.title} className="w-10 h-10 rounded-lg object-cover" />}
             <span className="text-sm font-semibold text-card-foreground flex-1">{mod.title}</span>
-            <Button variant="ghost" size="icon" onClick={() => { setEditMod(mod); setModForm({ title: mod.title, sort_order: mod.sort_order, image_url: mod.image_url || "" }); setModDialogOpen(true); }}>
+            <Button variant="ghost" size="icon" onClick={() => { setEditMod(mod); setModForm({ title: mod.title, sort_order: mod.sort_order, image_url: mod.image_url || "", show_order: mod.show_order }); setModDialogOpen(true); }}>
               <Pencil className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => deleteModule(mod.id)}>

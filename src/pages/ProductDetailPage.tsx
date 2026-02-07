@@ -9,6 +9,7 @@ interface Module {
   title: string;
   sort_order: number;
   image_url: string | null;
+  show_order: boolean;
 }
 
 interface ModuleContent {
@@ -129,7 +130,7 @@ const ProductDetailPage = () => {
                 <CollapsibleTrigger className="w-full">
                   <div className={`flex items-center gap-3 rounded-xl bg-gradient-to-br ${moduleColors[index % moduleColors.length]} p-4 shadow-sm overflow-hidden`}>
                     {mod.image_url && <img src={mod.image_url} alt={mod.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
-                    <span className="text-lg font-bold text-foreground/80">{mod.sort_order}</span>
+                    {mod.show_order && <span className="text-lg font-bold text-foreground/80">{mod.sort_order}</span>}
                     <span className="text-sm font-semibold text-foreground flex-1 text-left">{mod.title}</span>
                     <span className="text-xs text-muted-foreground">{modContents.length} itens</span>
                     {openModules[mod.id] ? <ChevronDown className="w-4 h-4 text-foreground/60" /> : <ChevronRight className="w-4 h-4 text-foreground/60" />}
