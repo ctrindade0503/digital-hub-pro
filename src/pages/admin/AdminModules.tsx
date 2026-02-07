@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, ChevronLeft, FileText, Video, Link as LinkIcon, Type } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronLeft, FileText, Video, Link as LinkIcon, Type, Upload, AppWindow } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Module { id: string; title: string; sort_order: number; }
 interface ModuleContent { id: string; module_id: string; type: string; title: string; url: string | null; content: string | null; sort_order: number; }
 
-const contentTypeIcons: Record<string, typeof FileText> = { pdf: FileText, video: Video, link: LinkIcon, text: Type };
+const contentTypeIcons: Record<string, typeof FileText> = { pdf: FileText, video: Video, link: LinkIcon, text: Type, app: AppWindow };
 
 const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => void }) => {
   const [modules, setModules] = useState<Module[]>([]);
@@ -21,7 +21,41 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
   const [modForm, setModForm] = useState({ title: "", sort_order: 0 });
   const [contentForm, setContentForm] = useState({ title: "", type: "text", url: "", content: "" });
   const [editMod, setEditMod] = useState<Module | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `modules/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("uploads").upload(filePath, file);
+      if (error) {
+        toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(filePath);
+      setContentForm((prev) => ({ ...prev, url: urlData.publicUrl }));
+      toast({ title: "Arquivo enviado!" });
+    } catch {
+      toast({ title: "Erro inesperado no upload", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const getAcceptTypes = () => {
+    switch (contentForm.type) {
+      case "pdf": return ".pdf";
+      case "video": return "video/*";
+      case "app": return ".apk,.ipa,.exe,.dmg,.zip";
+      default: return "*";
+    }
+  };
 
   const fetch = async () => {
     const { data: mods } = await supabase.from("modules").select("*").eq("product_id", productId).order("sort_order");
@@ -120,16 +154,29 @@ const AdminModules = ({ productId, onBack }: { productId: string; onBack: () => 
           <DialogHeader><DialogTitle>Novo Conteúdo</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <Input placeholder="Título" value={contentForm.title} onChange={(e) => setContentForm({ ...contentForm, title: e.target.value })} />
-            <Select value={contentForm.type} onValueChange={(v) => setContentForm({ ...contentForm, type: v })}>
+            <Select value={contentForm.type} onValueChange={(v) => setContentForm({ ...contentForm, type: v, url: "", content: "" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="pdf">PDF</SelectItem>
                 <SelectItem value="video">Vídeo</SelectItem>
                 <SelectItem value="link">Link</SelectItem>
                 <SelectItem value="text">Texto</SelectItem>
+                <SelectItem value="app">Aplicativo</SelectItem>
               </SelectContent>
             </Select>
-            {(contentForm.type === "pdf" || contentForm.type === "video" || contentForm.type === "link") && (
+            {(contentForm.type === "pdf" || contentForm.type === "video" || contentForm.type === "app") && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()} className="gap-1">
+                    <Upload className="w-4 h-4" />{uploading ? "Enviando..." : "Upload"}
+                  </Button>
+                  <input ref={fileInputRef} type="file" accept={getAcceptTypes()} className="hidden" onChange={handleFileUpload} />
+                  <span className="text-xs text-muted-foreground self-center">ou cole a URL abaixo</span>
+                </div>
+                <Input placeholder="URL" value={contentForm.url} onChange={(e) => setContentForm({ ...contentForm, url: e.target.value })} />
+              </div>
+            )}
+            {contentForm.type === "link" && (
               <Input placeholder="URL" value={contentForm.url} onChange={(e) => setContentForm({ ...contentForm, url: e.target.value })} />
             )}
             {contentForm.type === "text" && (
