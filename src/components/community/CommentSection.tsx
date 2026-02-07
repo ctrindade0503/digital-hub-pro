@@ -115,7 +115,7 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
                 </span>
                 {!comment.approved && (
                   <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                    <Clock className="w-2.5 h-2.5" /> Pendente
+                    <Clock className="w-2.5 h-2.5" /> Aguardando aprovação
                   </span>
                 )}
               </div>
