@@ -48,11 +48,12 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
 
   const handleComment = async () => {
     if (!newComment.trim() || !userId) return;
+    const shouldApprove = requireApproval === true ? false : true;
     await supabase.from("community_post_comments").insert({
       post_id: postId,
       user_id: userId,
       content: newComment.trim(),
-      approved: !requireApproval,
+      approved: shouldApprove,
     });
     // Update comments_count
     const currentCount = visibleComments.filter((c) => c.approved).length;
