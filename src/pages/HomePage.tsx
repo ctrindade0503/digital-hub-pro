@@ -5,11 +5,27 @@ import BannerCarousel from "@/components/BannerCarousel";
 import ProductCard, { type ProductCardData } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<ProductCardData[]>([]);
   const { unreadCount } = useNotifications();
+  const { profile } = useProfile();
+  const [appIconUrl, setAppIconUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "app_icon_url")
+        .maybeSingle();
+      if (data?.value) setAppIconUrl(data.value);
+    };
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -34,21 +50,51 @@ const HomePage = () => {
         ...p,
         purchased: accessIds.includes(p.id),
       }));
-      // Purchased first (in admin sort_order), then non-purchased (in admin sort_order)
       mapped.sort((a, b) => {
         if (a.purchased !== b.purchased) return a.purchased ? -1 : 1;
-        return 0; // already sorted by sort_order from DB
+        return 0;
       });
       setProducts(mapped);
     };
     load();
   }, []);
 
+  const displayName = profile?.nickname && profile?.show_nickname
+    ? profile.nickname
+    : profile?.name || "Usuário";
+
+  const initials = displayName
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="pb-32">
       <header className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
-        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-          <span className="text-lg font-bold text-primary">M</span>
+        <div className="flex items-center gap-3">
+          {appIconUrl ? (
+            <img src={appIconUrl} alt="Ícone" className="w-10 h-10 rounded-full object-cover" />
+          ) : (
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <span className="text-lg font-bold text-primary">M</span>
+            </div>
+          )}
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => navigate("/profile")}
+          >
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs bg-muted text-muted-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
+              {displayName}
+            </span>
+          </div>
         </div>
         <button
           onClick={() => navigate("/notifications")}
