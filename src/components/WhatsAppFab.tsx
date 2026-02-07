@@ -1,11 +1,22 @@
 import { MessageCircle } from "lucide-react";
-
-const WHATSAPP_NUMBER = "5511999999999";
-const WHATSAPP_MESSAGE = "Olá! Preciso de ajuda.";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const WhatsAppFab = () => {
+  const [number, setNumber] = useState("5511999999999");
+  const [message, setMessage] = useState("Olá! Preciso de ajuda.");
+
+  useEffect(() => {
+    supabase.from("app_settings").select("key, value").in("key", ["whatsapp_number", "whatsapp_message"]).then(({ data }) => {
+      (data || []).forEach((s) => {
+        if (s.key === "whatsapp_number" && s.value) setNumber(s.value);
+        if (s.key === "whatsapp_message" && s.value) setMessage(s.value);
+      });
+    });
+  }, []);
+
   const handleClick = () => {
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+    const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
 
