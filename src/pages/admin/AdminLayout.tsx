@@ -62,7 +62,7 @@ const AdminLayout = () => {
         </div>
       </nav>
 
-      <div className="p-4 max-w-4xl mx-auto">
+      <div className="p-4 pb-20 max-w-4xl mx-auto">
         <Outlet />
       </div>
     </div>

@@ -26,7 +26,8 @@ const AppLayout = () => {
   const location = useLocation();
   const isLogin = location.pathname === "/";
   const isAdmin = location.pathname.startsWith("/admin");
-  const showNav = !isLogin && !isAdmin;
+  const showNav = !isLogin;
+  const showWhatsApp = !isLogin && !isAdmin;
 
   return (
     <div className="max-w-lg mx-auto min-h-screen bg-background relative">
@@ -47,7 +48,7 @@ const AppLayout = () => {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {showNav && <WhatsAppFab />}
+      {showWhatsApp && <WhatsAppFab />}
       {showNav && <BottomNav />}
     </div>
   );
