@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import FeedPage from "./pages/FeedPage";
@@ -25,6 +26,7 @@ import WhatsAppFab from "./components/WhatsAppFab";
 const queryClient = new QueryClient();
 
 const AppLayout = () => {
+  useTheme();
   const location = useLocation();
   const isLogin = location.pathname === "/";
   const isAdmin = location.pathname.startsWith("/admin");
