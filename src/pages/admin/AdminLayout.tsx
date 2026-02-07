@@ -1,12 +1,13 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Package, Image, Layers, Rss, Users, Settings, ChevronLeft, Shield, Paintbrush } from "lucide-react";
+import { Package, Image, Layers, Rss, Users, Settings, ChevronLeft, Shield, Paintbrush, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { path: "/admin/products", icon: Package, label: "Produtos" },
   { path: "/admin/banners", icon: Image, label: "Banners" },
   { path: "/admin/feed", icon: Rss, label: "Feed" },
+  { path: "/admin/community", icon: MessageCircle, label: "Comunidade" },
   { path: "/admin/users", icon: Users, label: "Usuários" },
   { path: "/admin/colors", icon: Paintbrush, label: "Cores" },
   { path: "/admin/settings", icon: Settings, label: "Config." },
