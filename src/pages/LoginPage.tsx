@@ -15,9 +15,15 @@ const LoginPage = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
 
+  // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && user) navigate("/home", { replace: true });
+    if (!authLoading && user) {
+      navigate("/home", { replace: true });
+    }
   }, [user, authLoading, navigate]);
+
+  // Show nothing while checking auth to prevent flash
+  if (authLoading) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
