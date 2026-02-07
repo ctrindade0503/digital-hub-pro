@@ -1,0 +1,1 @@
+ALTER TABLE public.community_post_comments ALTER COLUMN approved SET DEFAULT false;
