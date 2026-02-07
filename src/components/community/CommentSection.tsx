@@ -46,10 +46,13 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
     return false;
   });
 
+  console.log("[CommentSection] render state:", { isAdmin, requireApproval, userId, postId });
+
   const handleComment = async () => {
     if (!newComment.trim() || !userId) return;
     const shouldApprove = isAdmin ? true : !requireApproval;
     console.log("[CommentSection] inserting comment:", { isAdmin, requireApproval, shouldApprove, userId });
+    alert(`DEBUG: isAdmin=${isAdmin}, requireApproval=${requireApproval}, shouldApprove=${shouldApprove}`);
     const { error } = await supabase.from("community_post_comments").insert({
       post_id: postId,
       user_id: userId,
