@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Heart, MessageCircle, Send, ShieldCheck, Upload } from "lucide-react";
+import { Heart, MessageCircle, Send, ShieldCheck, Upload, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,6 +129,15 @@ const CommunityPage = () => {
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!user) return;
+    // Delete related comments and likes first
+    await supabase.from("community_post_comments").delete().eq("post_id", postId);
+    await supabase.from("community_post_likes").delete().eq("post_id", postId);
+    await supabase.from("community_posts").delete().eq("id", postId);
+    queryClient.invalidateQueries({ queryKey: ["community_posts"] });
+  };
+
   const getPostDisplay = (post: any) => {
     // If display_name is set, it's a simulated user post
     if (post.display_name) {
@@ -230,7 +239,7 @@ const CommunityPage = () => {
                       {display.initial}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-card-foreground">{display.name}</p>
                       {display.isAdmin && (
@@ -243,6 +252,15 @@ const CommunityPage = () => {
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}
                     </p>
                   </div>
+                  {(isAdmin || post.user_id === user?.id) && (
+                    <button
+                      onClick={() => handleDeletePost(post.id)}
+                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                      title="Excluir postagem"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
                 <p className="text-sm text-card-foreground leading-relaxed mb-3 whitespace-pre-line">
                   {post.content}
