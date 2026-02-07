@@ -131,7 +131,7 @@ const ProductDetailPage = () => {
               <Collapsible key={mod.id} open={openModules[mod.id]} onOpenChange={() => toggleModule(mod.id)}>
                 <CollapsibleTrigger className="w-full">
                   <div className={`flex items-center gap-3 rounded-xl bg-gradient-to-br ${moduleColors[index % moduleColors.length]} p-4 shadow-sm overflow-hidden`}>
-                    {mod.image_url && <img src={mod.image_url} alt={mod.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />}
+                    {mod.image_url && <img src={mod.image_url} alt={mod.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 -my-2" />}
                     {mod.show_order && <span className="text-lg font-bold text-foreground/80">{mod.sort_order}</span>}
                     <span className="text-sm font-semibold text-foreground flex-1 text-left">{mod.title}</span>
                     <span className="text-xs text-muted-foreground">{modContents.length} itens</span>
