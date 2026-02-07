@@ -1,7 +1,8 @@
-import { Home, MessageSquare, Users, User } from "lucide-react";
+import { Home, MessageSquare, Users, User, Shield } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
-const tabs = [
+const baseTabs = [
   { path: "/home", icon: Home, label: "Início" },
   { path: "/feed", icon: MessageSquare, label: "Feed" },
   { path: "/community", icon: Users, label: "Comunidade" },
@@ -11,12 +12,19 @@ const tabs = [
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+
+  const tabs = isAdmin
+    ? [...baseTabs, { path: "/admin", icon: Shield, label: "Admin" }]
+    : baseTabs;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-bottom">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
         {tabs.map((tab) => {
-          const isActive = location.pathname === tab.path;
+          const isActive = tab.path === "/admin"
+            ? location.pathname.startsWith("/admin")
+            : location.pathname === tab.path;
           return (
             <button
               key={tab.path}
