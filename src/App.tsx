@@ -22,6 +22,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminColors from "./pages/admin/AdminColors";
 import AdminModeration from "./pages/admin/AdminModeration";
+import AdminNotifications from "./pages/admin/AdminNotifications";
+import NotificationsPage from "./pages/NotificationsPage";
 
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
@@ -48,6 +50,7 @@ const AppLayout = () => {
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/pdf-viewer" element={<PdfViewerPage />} />
         <Route path="/video-player" element={<VideoPlayerPage />} />
         <Route path="/admin" element={<AdminLayout />}>
@@ -58,6 +61,7 @@ const AppLayout = () => {
           
           <Route path="users" element={<AdminUsers />} />
           <Route path="moderation" element={<AdminModeration />} />
+          <Route path="notifications" element={<AdminNotifications />} />
           <Route path="colors" element={<AdminColors />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
