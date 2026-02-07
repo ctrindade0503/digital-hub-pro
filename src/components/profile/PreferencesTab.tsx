@@ -14,7 +14,10 @@ const PreferencesTab = () => {
       label: "Tema escuro",
       description: "Alternar entre tema claro e escuro",
       checked: preferences?.theme === "dark",
-      onChange: (v: boolean) => updatePreferences.mutate({ theme: v ? "dark" : "light" }),
+      onChange: (v: boolean) => {
+        document.documentElement.classList.toggle("dark", v);
+        updatePreferences.mutate({ theme: v ? "dark" : "light" });
+      },
     },
     {
       icon: preferences?.notifications_enabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />,
