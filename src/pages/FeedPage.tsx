@@ -1,11 +1,19 @@
-import { Bell, ShieldCheck } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Bell, ShieldCheck, Send, Trash2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const FeedPage = () => {
+  const { user, isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const [newPost, setNewPost] = useState("");
+
   const { data: posts, isLoading } = useQuery({
     queryKey: ["feed_posts"],
     queryFn: async () => {
@@ -17,15 +25,12 @@ const FeedPage = () => {
 
       if (!data || data.length === 0) return [];
 
-      // Get unique user_ids
       const userIds = [...new Set(data.map((p) => p.user_id).filter(Boolean))];
 
-      // Fetch profiles
       const { data: profiles } = userIds.length
         ? await supabase.from("profiles").select("user_id, name, avatar_url").in("user_id", userIds)
         : { data: [] };
 
-      // Fetch admin roles
       const { data: roles } = userIds.length
         ? await supabase.from("user_roles").select("user_id, role").in("user_id", userIds).eq("role", "admin")
         : { data: [] };
@@ -42,6 +47,18 @@ const FeedPage = () => {
     },
   });
 
+  const handlePost = async () => {
+    if (!newPost.trim() || !user) return;
+    await supabase.from("feed_posts").insert({ content: newPost, user_id: user.id });
+    setNewPost("");
+    queryClient.invalidateQueries({ queryKey: ["feed_posts"] });
+  };
+
+  const handleDelete = async (postId: string) => {
+    await supabase.from("feed_posts").delete().eq("id", postId);
+    queryClient.invalidateQueries({ queryKey: ["feed_posts"] });
+  };
+
   return (
     <div className="pb-32 min-h-screen bg-background">
       <header className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
@@ -55,6 +72,21 @@ const FeedPage = () => {
 
       <div className="px-4 mt-4">
         <h2 className="text-xl font-bold text-foreground mb-4">Atualizações</h2>
+
+        {isAdmin && (
+          <div className="flex gap-2 mb-4">
+            <Input
+              placeholder="Escreva uma atualização..."
+              value={newPost}
+              onChange={(e) => setNewPost(e.target.value)}
+              className="flex-1 h-10 rounded-xl"
+              onKeyDown={(e) => e.key === "Enter" && handlePost()}
+            />
+            <Button onClick={handlePost} size="icon" className="h-10 w-10 rounded-xl shrink-0">
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         <div className="space-y-4">
           {isLoading &&
@@ -95,7 +127,7 @@ const FeedPage = () => {
                     </span>
                   </div>
                 )}
-                <div>
+                <div className="flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className="text-sm font-semibold text-card-foreground">
                       {post.author_name}
@@ -111,6 +143,15 @@ const FeedPage = () => {
                     {format(new Date(post.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
                   </p>
                 </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDelete(post.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-1 shrink-0"
+                    title="Excluir postagem"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               {post.image_url && (
                 <img
