@@ -27,13 +27,8 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Clear any stale session before login
-      try {
-        const keys = Object.keys(localStorage);
-        keys.forEach((key) => {
-          if (key.startsWith("sb-")) localStorage.removeItem(key);
-        });
-      } catch {}
+      // Force sign out any stale session (both in-memory and localStorage)
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
 
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
