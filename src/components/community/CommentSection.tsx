@@ -59,29 +59,40 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
       console.error("Error inserting comment:", error);
       return;
     }
-    const currentCount = visibleComments.filter((c) => c.approved).length;
+    // Recount approved comments from DB for accuracy
+    const { count } = await supabase
+      .from("community_post_comments")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", postId)
+      .eq("approved", true);
     await supabase.from("community_posts").update({
-      comments_count: currentCount + (requireApproval ? 0 : 1),
+      comments_count: count || 0,
     }).eq("id", postId);
     setNewComment("");
     queryClient.invalidateQueries({ queryKey: ["community_comments", postId] });
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
 
-  const handleDelete = async (commentId: string, wasApproved: boolean) => {
+  const handleDelete = async (commentId: string) => {
     await supabase.from("community_post_comments").delete().eq("id", commentId);
-    if (wasApproved) {
-      const approvedCount = visibleComments.filter((c) => c.approved && c.id !== commentId).length;
-      await supabase.from("community_posts").update({ comments_count: approvedCount }).eq("id", postId);
-    }
+    const { count } = await supabase
+      .from("community_post_comments")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", postId)
+      .eq("approved", true);
+    await supabase.from("community_posts").update({ comments_count: count || 0 }).eq("id", postId);
     queryClient.invalidateQueries({ queryKey: ["community_comments", postId] });
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
 
   const handleApprove = async (commentId: string) => {
     await supabase.from("community_post_comments").update({ approved: true }).eq("id", commentId);
-    const approvedCount = visibleComments.filter((c) => c.approved).length + 1;
-    await supabase.from("community_posts").update({ comments_count: approvedCount }).eq("id", postId);
+    const { count } = await supabase
+      .from("community_post_comments")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", postId)
+      .eq("approved", true);
+    await supabase.from("community_posts").update({ comments_count: count || 0 }).eq("id", postId);
     queryClient.invalidateQueries({ queryKey: ["community_comments", postId] });
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
@@ -137,7 +148,7 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
               )}
               {canDelete && (
                 <button
-                  onClick={() => handleDelete(comment.id, comment.approved)}
+                  onClick={() => handleDelete(comment.id)}
                   className="text-muted-foreground hover:text-destructive transition-colors p-1"
                   title="Apagar"
                 >
