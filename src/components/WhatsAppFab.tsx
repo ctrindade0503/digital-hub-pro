@@ -1,4 +1,4 @@
-import whatsappIcon from "@/assets/whatsapp-icon.jpg";
+import whatsappIcon from "@/assets/whatsapp-icon.png";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
