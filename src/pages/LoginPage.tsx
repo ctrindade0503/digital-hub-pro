@@ -11,9 +11,22 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loginImageUrl, setLoginImageUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    const loadLoginImage = async () => {
+      const { data } = await supabase
+        .from("app_settings")
+        .select("value")
+        .eq("key", "login_image_url")
+        .maybeSingle();
+      if (data?.value) setLoginImageUrl(data.value);
+    };
+    loadLoginImage();
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -46,6 +59,11 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex flex-col">
+      {loginImageUrl && (
+        <div className="w-full flex justify-center pt-8 px-6">
+          <img src={loginImageUrl} alt="Login" className="max-w-full max-h-48 object-contain rounded-xl" />
+        </div>
+      )}
       <div className="flex justify-center pt-6 px-4">
         <Button
           variant="outline"

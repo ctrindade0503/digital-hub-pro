@@ -12,8 +12,11 @@ const AdminSettings = () => {
   const [whatsappMessage, setWhatsappMessage] = useState("");
   const [requireCommentApproval, setRequireCommentApproval] = useState(false);
   const [appIconUrl, setAppIconUrl] = useState("");
+  const [loginImageUrl, setLoginImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadingLogin, setUploadingLogin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const loginFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -24,6 +27,7 @@ const AdminSettings = () => {
         if (s.key === "whatsapp_message") setWhatsappMessage(s.value);
         if (s.key === "require_comment_approval") setRequireCommentApproval(s.value === "true");
         if (s.key === "app_icon_url") setAppIconUrl(s.value);
+        if (s.key === "login_image_url") setLoginImageUrl(s.value);
       });
     };
     fetch();
@@ -48,11 +52,31 @@ const AdminSettings = () => {
     }
   };
 
+  const handleLoginImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogin(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `app/login-image.${ext}`;
+      const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
+      setLoginImageUrl(urlData.publicUrl);
+      toast({ title: "Imagem enviada! Salve para aplicar." });
+    } catch {
+      toast({ title: "Erro ao enviar imagem", variant: "destructive" });
+    } finally {
+      setUploadingLogin(false);
+    }
+  };
+
   const save = async () => {
     await supabase.from("app_settings").update({ value: whatsappNumber }).eq("key", "whatsapp_number");
     await supabase.from("app_settings").update({ value: whatsappMessage }).eq("key", "whatsapp_message");
     await supabase.from("app_settings").update({ value: requireCommentApproval ? "true" : "false" }).eq("key", "require_comment_approval");
     await supabase.from("app_settings").update({ value: appIconUrl }).eq("key", "app_icon_url");
+    await supabase.from("app_settings").update({ value: loginImageUrl }).eq("key", "login_image_url");
     toast({ title: "Configurações salvas" });
   };
 
@@ -84,6 +108,33 @@ const AdminSettings = () => {
               {uploading ? "Enviando..." : "Enviar ícone"}
             </Button>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleIconUpload} />
+          </div>
+        </div>
+
+        {/* Login Image */}
+        <div className="border-t border-border pt-4">
+          <label className="text-sm font-medium text-foreground">Imagem da Tela de Login</label>
+          <p className="text-xs text-muted-foreground mb-2">Exibida no topo da página de login</p>
+          <div className="flex items-center gap-3">
+            {loginImageUrl ? (
+              <div className="relative">
+                <img src={loginImageUrl} alt="Login" className="h-14 object-contain rounded border border-border" />
+                <button
+                  onClick={() => setLoginImageUrl("")}
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded bg-muted flex items-center justify-center border border-border">
+                <Upload className="w-5 h-5 text-muted-foreground" />
+              </div>
+            )}
+            <Button variant="outline" size="sm" onClick={() => loginFileInputRef.current?.click()} disabled={uploadingLogin}>
+              {uploadingLogin ? "Enviando..." : "Enviar imagem"}
+            </Button>
+            <input ref={loginFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLoginImageUpload} />
           </div>
         </div>
 
