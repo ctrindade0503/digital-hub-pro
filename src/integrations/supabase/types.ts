@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_history: {
+        Row: {
+          accessed_at: string
+          content_id: string
+          content_title: string | null
+          content_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          content_id: string
+          content_title?: string | null
+          content_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          content_id?: string
+          content_title?: string | null
+          content_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           id: string
@@ -292,28 +319,76 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
           id: string
           name: string | null
+          nickname: string | null
+          notify_comments: boolean
+          phone: string | null
+          show_nickname: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name?: string | null
+          nickname?: string | null
+          notify_comments?: boolean
+          phone?: string | null
+          show_nickname?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name?: string | null
+          nickname?: string | null
+          notify_comments?: boolean
+          phone?: string | null
+          show_nickname?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean
+          id: string
+          language: string
+          notifications_enabled: boolean
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          language?: string
+          notifications_enabled?: boolean
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          language?: string
+          notifications_enabled?: boolean
+          theme?: string
           updated_at?: string
           user_id?: string
         }
