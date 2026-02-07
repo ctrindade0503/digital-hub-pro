@@ -9,8 +9,7 @@ const ProfilePage = () => {
 
   const handleLogout = async () => {
     await signOut();
-    // Small delay to ensure auth state is cleared before navigating
-    setTimeout(() => navigate("/", { replace: true }), 100);
+    navigate("/", { replace: true });
   };
 
   return (

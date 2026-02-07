@@ -61,8 +61,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Sign out error, forcing cleanup:", err);
+    }
+    // Force cleanup regardless of signOut result
+    setUser(null);
+    setSession(null);
     setIsAdmin(false);
+    // Clear any stale storage
+    try {
+      const keys = Object.keys(localStorage);
+      keys.forEach((key) => {
+        if (key.startsWith("sb-")) localStorage.removeItem(key);
+      });
+    } catch {}
   };
 
   return (
