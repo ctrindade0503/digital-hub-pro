@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import CommentSection from "@/components/community/CommentSection";
 
 interface Profile {
   user_id: string;
@@ -26,7 +27,17 @@ const CommunityPage = () => {
   const [fakeName, setFakeName] = useState("");
   const [fakeAvatar, setFakeAvatar] = useState("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const fakeAvatarInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: requireApproval } = useQuery({
+    queryKey: ["require_comment_approval"],
+    queryFn: async () => {
+      const { data } = await supabase.from("app_settings").select("value").eq("key", "require_comment_approval").maybeSingle();
+      return data?.value === "true";
+    },
+  });
+
   const { data: profiles } = useQuery({
     queryKey: ["community_profiles"],
     queryFn: async () => {
@@ -247,11 +258,27 @@ const CommunityPage = () => {
                     <Heart className="w-4 h-4" />
                     <span className="text-xs">{post.likes_count}</span>
                   </button>
-                  <button className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors">
+                  <button
+                    onClick={() => setExpandedComments((prev) => {
+                      const next = new Set(prev);
+                      next.has(post.id) ? next.delete(post.id) : next.add(post.id);
+                      return next;
+                    })}
+                    className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+                  >
                     <MessageCircle className="w-4 h-4" />
                     <span className="text-xs">{post.comments_count}</span>
                   </button>
                 </div>
+                {expandedComments.has(post.id) && (
+                  <CommentSection
+                    postId={post.id}
+                    userId={user?.id}
+                    isAdmin={isAdmin}
+                    profileMap={profileMap}
+                    requireApproval={!!requireApproval}
+                  />
+                )}
               </article>
             );
           })
