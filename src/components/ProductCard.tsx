@@ -1,19 +1,24 @@
 import { Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import type { Product } from "@/lib/mockData";
 
-interface ProductCardProps {
-  product: Product;
+export interface ProductCardData {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  type: string;
+  purchase_link: string | null;
+  purchased: boolean;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product }: { product: ProductCardData }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
     if (product.purchased) {
       navigate(`/product/${product.id}`);
-    } else if (product.purchaseLink) {
-      window.open(product.purchaseLink, "_blank");
+    } else if (product.purchase_link) {
+      window.open(product.purchase_link, "_blank");
     }
   };
 
@@ -24,7 +29,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     >
       <div className="relative aspect-square w-full overflow-hidden">
         <img
-          src={product.image}
+          src={product.image_url || "/placeholder.svg"}
           alt={product.name}
           className="w-full h-full object-cover"
         />
