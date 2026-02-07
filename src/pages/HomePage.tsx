@@ -26,12 +26,16 @@ const HomePage = () => {
         accessIds = (access || []).map((a) => a.product_id);
       }
 
-      setProducts(
-        (prods || []).map((p) => ({
-          ...p,
-          purchased: accessIds.includes(p.id),
-        }))
-      );
+      const mapped = (prods || []).map((p) => ({
+        ...p,
+        purchased: accessIds.includes(p.id),
+      }));
+      // Purchased first (in admin sort_order), then non-purchased (in admin sort_order)
+      mapped.sort((a, b) => {
+        if (a.purchased !== b.purchased) return a.purchased ? -1 : 1;
+        return 0; // already sorted by sort_order from DB
+      });
+      setProducts(mapped);
     };
     load();
   }, []);
