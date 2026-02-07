@@ -21,6 +21,7 @@ import AdminFeed from "./pages/admin/AdminFeed";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminColors from "./pages/admin/AdminColors";
+import AdminModeration from "./pages/admin/AdminModeration";
 
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
@@ -56,6 +57,7 @@ const AppLayout = () => {
           <Route path="feed" element={<AdminFeed />} />
           
           <Route path="users" element={<AdminUsers />} />
+          <Route path="moderation" element={<AdminModeration />} />
           <Route path="colors" element={<AdminColors />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
