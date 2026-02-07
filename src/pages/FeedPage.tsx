@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, ShieldCheck, Send, Trash2 } from "lucide-react";
+import { Bell, Send, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -132,12 +132,6 @@ const FeedPage = () => {
                     <p className="text-sm font-semibold text-card-foreground">
                       {post.author_name}
                     </p>
-                    {post.is_admin && (
-                      <span className="inline-flex items-center gap-0.5 text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
-                        <ShieldCheck className="w-3 h-3" />
-                        Admin
-                      </span>
-                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(post.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
