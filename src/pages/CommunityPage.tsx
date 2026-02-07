@@ -145,6 +145,7 @@ const CommunityPage = () => {
       }).eq("id", postId);
     }
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
+    queryClient.invalidateQueries({ queryKey: ["user_likes", user?.id] });
   };
 
   const handleDeletePost = async (postId: string) => {
