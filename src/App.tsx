@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { useAppColors } from "@/hooks/useAppColors";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import FeedPage from "./pages/FeedPage";
@@ -19,6 +20,7 @@ import AdminBanners from "./pages/admin/AdminBanners";
 import AdminFeed from "./pages/admin/AdminFeed";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminColors from "./pages/admin/AdminColors";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 import WhatsAppFab from "./components/WhatsAppFab";
@@ -27,6 +29,7 @@ const queryClient = new QueryClient();
 
 const AppLayout = () => {
   useTheme();
+  useAppColors();
   const location = useLocation();
   const isLogin = location.pathname === "/";
   const isAdmin = location.pathname.startsWith("/admin");
@@ -51,6 +54,7 @@ const AppLayout = () => {
           <Route path="banners" element={<AdminBanners />} />
           <Route path="feed" element={<AdminFeed />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="colors" element={<AdminColors />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
         <Route path="*" element={<NotFound />} />
