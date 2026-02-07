@@ -54,6 +54,21 @@ const CommunityPage = () => {
     },
   });
 
+  const { data: userLikes } = useQuery({
+    queryKey: ["user_likes", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("community_post_likes")
+        .select("post_id")
+        .eq("user_id", user.id);
+      return (data || []).map((l) => l.post_id);
+    },
+    enabled: !!user,
+  });
+
+  const likedSet = new Set(userLikes || []);
+
   const { data: posts, isLoading } = useQuery({
     queryKey: ["community_posts"],
     queryFn: async () => {
@@ -107,6 +122,7 @@ const CommunityPage = () => {
     setFakeAvatar("");
     setSimulateUser(false);
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
+    queryClient.invalidateQueries({ queryKey: ["user_likes", user?.id] });
   };
 
   const handleLike = async (postId: string) => {
@@ -299,9 +315,9 @@ const CommunityPage = () => {
                 <div className="flex items-center gap-4 pt-2 border-t border-border">
                   <button
                     onClick={() => handleLike(post.id)}
-                    className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
+                    className={`flex items-center gap-1.5 transition-colors ${likedSet.has(post.id) ? "text-destructive" : "text-muted-foreground hover:text-primary"}`}
                   >
-                    <Heart className="w-4 h-4" />
+                    <Heart className={`w-4 h-4 ${likedSet.has(post.id) ? "fill-current" : ""}`} />
                     <span className="text-xs">{post.likes_count}</span>
                   </button>
                   <button
