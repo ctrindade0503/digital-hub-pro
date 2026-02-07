@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Layers, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,7 +25,27 @@ const AdminProducts = () => {
   const [modulesProductId, setModulesProductId] = useState<string | null>(null);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({ name: "", description: "", type: "simple", purchase_link: "", image_url: "" });
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const filePath = `products/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("uploads").upload(filePath, file);
+    if (error) {
+      toast({ title: "Erro no upload", description: error.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(filePath);
+    setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+    setUploading(false);
+    toast({ title: "Imagem enviada!" });
+  };
 
   const fetchProducts = async () => {
     const { data } = await supabase.from("products").select("*").order("sort_order");
@@ -88,7 +108,17 @@ const AdminProducts = () => {
             <div className="space-y-3">
               <Input placeholder="Nome" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               <Input placeholder="Descrição" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <Input placeholder="URL da imagem" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileInputRef.current?.click()} className="gap-1">
+                    <Upload className="w-4 h-4" />{uploading ? "Enviando..." : "Upload"}
+                  </Button>
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  <span className="text-xs text-muted-foreground self-center">ou cole a URL abaixo</span>
+                </div>
+                <Input placeholder="URL da imagem" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+                {form.image_url && <img src={form.image_url} alt="Preview" className="w-20 h-20 rounded-lg object-cover" />}
+              </div>
               <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
