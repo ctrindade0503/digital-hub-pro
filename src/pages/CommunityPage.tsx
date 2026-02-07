@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Heart, MessageCircle, Send, ShieldCheck, Image as ImageIcon } from "lucide-react";
+import { useState, useRef } from "react";
+import { Heart, MessageCircle, Send, ShieldCheck, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,7 +25,8 @@ const CommunityPage = () => {
   const [simulateUser, setSimulateUser] = useState(false);
   const [fakeName, setFakeName] = useState("");
   const [fakeAvatar, setFakeAvatar] = useState("");
-
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fakeAvatarInputRef = useRef<HTMLInputElement>(null);
   const { data: profiles } = useQuery({
     queryKey: ["community_profiles"],
     queryFn: async () => {
@@ -59,6 +60,24 @@ const CommunityPage = () => {
   }, {});
   const adminSet = new Set(adminIds || []);
 
+  const handleFakeAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `fake-avatars/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("uploads").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(path);
+      setFakeAvatar(urlData.publicUrl);
+    } catch {
+      // silently fail
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handlePost = async () => {
     if (!newPost.trim() || !user) return;
     const insert: any = {
@@ -67,7 +86,7 @@ const CommunityPage = () => {
     };
     if (isAdmin && simulateUser && fakeName.trim()) {
       insert.display_name = fakeName.trim();
-      insert.display_avatar_url = fakeAvatar.trim() || null;
+      insert.display_avatar_url = fakeAvatar || null;
     }
     await supabase.from("community_posts").insert(insert);
     setNewPost("");
@@ -140,12 +159,32 @@ const CommunityPage = () => {
                   onChange={(e) => setFakeName(e.target.value)}
                   className="h-9 text-sm"
                 />
-                <Input
-                  placeholder="URL da foto de perfil (opcional)"
-                  value={fakeAvatar}
-                  onChange={(e) => setFakeAvatar(e.target.value)}
-                  className="h-9 text-sm"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fakeAvatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFakeAvatarUpload}
+                  />
+                  {fakeAvatar ? (
+                    <Avatar className="w-9 h-9">
+                      <AvatarImage src={fakeAvatar} />
+                      <AvatarFallback>?</AvatarFallback>
+                    </Avatar>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1.5"
+                    disabled={uploadingAvatar}
+                    onClick={() => fakeAvatarInputRef.current?.click()}
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploadingAvatar ? "Enviando..." : fakeAvatar ? "Trocar foto" : "Foto de perfil"}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
