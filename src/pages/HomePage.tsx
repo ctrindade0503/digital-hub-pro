@@ -75,7 +75,7 @@ const HomePage = () => {
       <header className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
         <div className="flex items-center gap-3">
           {appIconUrl ? (
-            <img src={appIconUrl} alt="Ícone" className="w-10 h-10 rounded-full object-cover" />
+            <img src={appIconUrl} alt="Ícone" className="h-10 object-contain" />
           ) : (
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-lg font-bold text-primary">M</span>
