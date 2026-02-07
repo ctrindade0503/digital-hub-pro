@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Heart, MessageCircle, Send, ShieldCheck, Upload, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Send, ShieldCheck, Upload, Trash2, CheckCircle, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -91,9 +91,11 @@ const CommunityPage = () => {
 
   const handlePost = async () => {
     if (!newPost.trim() || !user) return;
+    const shouldApprove = isAdmin ? true : !requireApproval;
     const insert: any = {
       content: newPost,
       user_id: user.id,
+      approved: shouldApprove,
     };
     if (isAdmin && simulateUser && fakeName.trim()) {
       insert.display_name = fakeName.trim();
@@ -135,6 +137,11 @@ const CommunityPage = () => {
     await supabase.from("community_post_comments").delete().eq("post_id", postId);
     await supabase.from("community_post_likes").delete().eq("post_id", postId);
     await supabase.from("community_posts").delete().eq("id", postId);
+    queryClient.invalidateQueries({ queryKey: ["community_posts"] });
+  };
+
+  const handleApprovePost = async (postId: string) => {
+    await supabase.from("community_posts").update({ approved: true }).eq("id", postId);
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
 
@@ -228,10 +235,15 @@ const CommunityPage = () => {
         {isLoading ? (
           <div className="text-center text-muted-foreground py-8">Carregando...</div>
         ) : (
-          (posts || []).map((post) => {
+          (posts || []).filter((post) => {
+            if (isAdmin) return true;
+            if (post.approved) return true;
+            if (post.user_id === user?.id) return true;
+            return false;
+          }).map((post) => {
             const display = getPostDisplay(post);
             return (
-              <article key={post.id} className="bg-card rounded-xl border border-border p-4 shadow-sm">
+              <article key={post.id} className={`bg-card rounded-xl border border-border p-4 shadow-sm ${!post.approved ? "opacity-70" : ""}`}>
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="w-10 h-10">
                     <AvatarImage src={display.avatar || undefined} />
@@ -247,20 +259,36 @@ const CommunityPage = () => {
                           <ShieldCheck className="w-3 h-3" /> Admin
                         </span>
                       )}
+                      {!post.approved && (
+                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                          <Clock className="w-2.5 h-2.5" /> Aguardando aprovação
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ptBR })}
                     </p>
                   </div>
-                  {(isAdmin || post.user_id === user?.id) && (
-                    <button
-                      onClick={() => handleDeletePost(post.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                      title="Excluir postagem"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {isAdmin && !post.approved && (
+                      <button
+                        onClick={() => handleApprovePost(post.id)}
+                        className="text-muted-foreground hover:text-primary transition-colors p-1"
+                        title="Aprovar postagem"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    )}
+                    {(isAdmin || post.user_id === user?.id) && (
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        title="Excluir postagem"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-card-foreground leading-relaxed mb-3 whitespace-pre-line">
                   {post.content}
