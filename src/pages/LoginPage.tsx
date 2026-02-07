@@ -27,6 +27,14 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      // Clear any stale session before login
+      try {
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          if (key.startsWith("sb-")) localStorage.removeItem(key);
+        });
+      } catch {}
+
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toast({ title: "Erro", description: error.message, variant: "destructive" });
