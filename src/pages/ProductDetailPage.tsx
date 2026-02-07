@@ -84,7 +84,9 @@ const ProductDetailPage = () => {
   const handleContentClick = (c: ModuleContent) => {
     if (c.type === "pdf" && c.url) {
       navigate(`/pdf-viewer?url=${encodeURIComponent(c.url)}&title=${encodeURIComponent(c.title)}`);
-    } else if ((c.type === "link" || c.type === "video" || c.type === "app") && c.url) {
+    } else if (c.type === "video" && c.url) {
+      navigate(`/video-player?url=${encodeURIComponent(c.url)}&title=${encodeURIComponent(c.title)}`);
+    } else if ((c.type === "link" || c.type === "app") && c.url) {
       window.open(c.url, "_blank");
     }
   };

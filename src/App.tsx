@@ -10,6 +10,8 @@ import FeedPage from "./pages/FeedPage";
 import CommunityPage from "./pages/CommunityPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import PdfViewerPage from "./pages/PdfViewerPage";
+import VideoPlayerPage from "./pages/VideoPlayerPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminBanners from "./pages/admin/AdminBanners";
@@ -26,8 +28,9 @@ const AppLayout = () => {
   const location = useLocation();
   const isLogin = location.pathname === "/";
   const isAdmin = location.pathname.startsWith("/admin");
-  const showNav = !isLogin;
-  const showWhatsApp = !isLogin && !isAdmin;
+  const isFullscreen = location.pathname === "/pdf-viewer" || location.pathname === "/video-player";
+  const showNav = !isLogin && !isFullscreen;
+  const showWhatsApp = !isLogin && !isAdmin && !isFullscreen;
 
   return (
     <div className="max-w-lg mx-auto min-h-screen bg-background relative">
@@ -38,6 +41,8 @@ const AppLayout = () => {
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/pdf-viewer" element={<PdfViewerPage />} />
+        <Route path="/video-player" element={<VideoPlayerPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/products" replace />} />
           <Route path="products" element={<AdminProducts />} />
