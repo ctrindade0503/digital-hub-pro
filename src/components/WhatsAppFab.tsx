@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react";
+import whatsappIcon from "@/assets/whatsapp-icon.jpg";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,10 +23,10 @@ const WhatsAppFab = () => {
   return (
     <button
       onClick={handleClick}
-      className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-whatsapp flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+      className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full overflow-hidden shadow-lg hover:scale-105 transition-transform"
       aria-label="Suporte via WhatsApp"
     >
-      <MessageCircle className="w-7 h-7 text-primary-foreground" />
+      <img src={whatsappIcon} alt="WhatsApp" className="w-full h-full object-cover" />
     </button>
   );
 };
