@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, Trash2, Layers, Upload, FileText, Video, AppWindow } from "lucide-react";
+import { Plus, Upload, FileText, Video, AppWindow, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import AdminModules from "./AdminModules";
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import SortableProductItem from "@/components/admin/SortableProductItem";
 
 interface Product {
   id: string;
@@ -36,6 +39,7 @@ const AdminProducts = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }));
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -94,6 +98,17 @@ const AdminProducts = () => {
   };
 
   useEffect(() => { fetchProducts(); }, []);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = products.findIndex((p) => p.id === active.id);
+    const newIndex = products.findIndex((p) => p.id === over.id);
+    const reordered = arrayMove(products, oldIndex, newIndex);
+    setProducts(reordered);
+    const updates = reordered.map((p, i) => supabase.from("products").update({ sort_order: i }).eq("id", p.id));
+    await Promise.all(updates);
+  };
 
   const handleSave = async () => {
     const payload = {
@@ -206,27 +221,16 @@ const AdminProducts = () => {
       ) : products.length === 0 ? (
         <p className="text-muted-foreground text-sm">Nenhum produto cadastrado.</p>
       ) : (
-        <div className="space-y-2">
-          {products.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 bg-card rounded-xl border border-border p-3">
-              {p.image_url && <img src={p.image_url} alt={p.name} className="w-12 h-12 rounded-lg object-cover" />}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-card-foreground truncate">{p.name}</p>
-                <p className="text-xs text-muted-foreground">{p.type === "modules" ? "Com módulos" : "Simples"}</p>
+        <div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={products.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {products.map((p) => (
+                  <SortableProductItem key={p.id} product={p} onEdit={openEdit} onDelete={handleDelete} onModules={setModulesProductId} />
+                ))}
               </div>
-              {p.type === "modules" && (
-                <Button variant="ghost" size="icon" onClick={() => setModulesProductId(p.id)}>
-                  <Layers className="w-4 h-4" />
-                </Button>
-              )}
-              <Button variant="ghost" size="icon" onClick={() => openEdit(p)}>
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}>
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
     </div>
