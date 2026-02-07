@@ -21,7 +21,7 @@ import AdminFeed from "./pages/admin/AdminFeed";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminColors from "./pages/admin/AdminColors";
-import AdminCommunity from "./pages/admin/AdminCommunity";
+
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 import WhatsAppFab from "./components/WhatsAppFab";
@@ -54,7 +54,7 @@ const AppLayout = () => {
           <Route path="products" element={<AdminProducts />} />
           <Route path="banners" element={<AdminBanners />} />
           <Route path="feed" element={<AdminFeed />} />
-          <Route path="community" element={<AdminCommunity />} />
+          
           <Route path="users" element={<AdminUsers />} />
           <Route path="colors" element={<AdminColors />} />
           <Route path="settings" element={<AdminSettings />} />
