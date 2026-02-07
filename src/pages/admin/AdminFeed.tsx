@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ const AdminFeed = () => {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ content: "", image_url: "" });
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const fetchPosts = async () => {
@@ -22,7 +24,7 @@ const AdminFeed = () => {
   useEffect(() => { fetchPosts(); }, []);
 
   const handleSave = async () => {
-    await supabase.from("feed_posts").insert({ content: form.content, image_url: form.image_url || null });
+    await supabase.from("feed_posts").insert({ content: form.content, image_url: form.image_url || null, user_id: user?.id } as any);
     setDialogOpen(false); setForm({ content: "", image_url: "" });
     toast({ title: "Post criado" }); fetchPosts();
   };

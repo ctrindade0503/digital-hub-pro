@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -14,7 +14,31 @@ const FeedPage = () => {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      if (!data || data.length === 0) return [];
+
+      // Get unique user_ids
+      const userIds = [...new Set(data.map((p) => p.user_id).filter(Boolean))];
+
+      // Fetch profiles
+      const { data: profiles } = userIds.length
+        ? await supabase.from("profiles").select("user_id, name, avatar_url").in("user_id", userIds)
+        : { data: [] };
+
+      // Fetch admin roles
+      const { data: roles } = userIds.length
+        ? await supabase.from("user_roles").select("user_id, role").in("user_id", userIds).eq("role", "admin")
+        : { data: [] };
+
+      const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+      const adminSet = new Set((roles ?? []).map((r) => r.user_id));
+
+      return data.map((post) => ({
+        ...post,
+        author_name: profileMap.get(post.user_id)?.name ?? "Usuário",
+        author_avatar: profileMap.get(post.user_id)?.avatar_url,
+        is_admin: adminSet.has(post.user_id),
+      }));
     },
   });
 
@@ -58,11 +82,31 @@ const FeedPage = () => {
               className="bg-card rounded-xl border border-border p-4 shadow-sm"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold text-primary">M</span>
-                </div>
+                {post.author_avatar ? (
+                  <img
+                    src={post.author_avatar}
+                    alt={post.author_name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-primary">
+                      {post.author_name?.charAt(0)?.toUpperCase() ?? "U"}
+                    </span>
+                  </div>
+                )}
                 <div>
-                  <p className="text-sm font-semibold text-card-foreground">Admin</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-semibold text-card-foreground">
+                      {post.author_name}
+                    </p>
+                    {post.is_admin && (
+                      <span className="inline-flex items-center gap-0.5 text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                        <ShieldCheck className="w-3 h-3" />
+                        Admin
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(post.created_at), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
                   </p>
