@@ -158,6 +158,7 @@ export type Database = {
       }
       community_posts: {
         Row: {
+          approved: boolean
           comments_count: number
           content: string
           created_at: string
@@ -169,6 +170,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approved?: boolean
           comments_count?: number
           content: string
           created_at?: string
@@ -180,6 +182,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approved?: boolean
           comments_count?: number
           content?: string
           created_at?: string
