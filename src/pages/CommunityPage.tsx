@@ -260,7 +260,7 @@ const CommunityPage = () => {
                         </span>
                       )}
                       {!post.approved && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        <span className="flex items-center gap-0.5 text-[10px] font-semibold text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30 px-1.5 py-0.5 rounded-full">
                           <Clock className="w-2.5 h-2.5" /> Aguardando aprovação
                         </span>
                       )}
