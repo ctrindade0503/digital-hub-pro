@@ -22,12 +22,18 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/home", { replace: true });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast({ title: "Erro", description: error.message, variant: "destructive" });
+      } else {
+        navigate("/home", { replace: true });
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      toast({ title: "Erro inesperado", description: "Tente novamente.", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
