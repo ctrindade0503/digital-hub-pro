@@ -22,8 +22,6 @@ const LoginPage = () => {
     }
   }, [user, authLoading, navigate]);
 
-  // Show nothing while checking auth to prevent flash
-  if (authLoading) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
