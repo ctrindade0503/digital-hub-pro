@@ -48,8 +48,8 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
 
   const handleComment = async () => {
     if (!newComment.trim() || !userId) return;
-    // Admin comments are always auto-approved; for regular users, check the setting
     const shouldApprove = isAdmin ? true : !requireApproval;
+    console.log("[CommentSection] inserting comment:", { isAdmin, requireApproval, shouldApprove, userId });
     const { error } = await supabase.from("community_post_comments").insert({
       post_id: postId,
       user_id: userId,
