@@ -16,7 +16,7 @@ const WhatsAppFab = () => {
   }, []);
 
   const handleClick = () => {
-    const url = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+    const url = `https://api.whatsapp.com/send?phone=${number}&text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   };
 
