@@ -315,10 +315,10 @@ const CommunityPage = () => {
                 <div className="flex items-center gap-4 pt-2 border-t border-border">
                   <button
                     onClick={() => handleLike(post.id)}
-                    className={`flex items-center gap-1.5 transition-colors ${likedSet.has(post.id) ? "text-destructive" : "text-muted-foreground hover:text-primary"}`}
+                    className="flex items-center gap-1.5 transition-colors text-muted-foreground hover:text-primary"
                   >
-                    <Heart className={`w-4 h-4 ${likedSet.has(post.id) ? "fill-current" : ""}`} />
-                    <span className="text-xs">{post.likes_count}</span>
+                    <Heart className={`w-4 h-4 ${likedSet.has(post.id) ? "text-destructive fill-current" : ""}`} />
+                    <span className="text-xs text-foreground">{post.likes_count}</span>
                   </button>
                   <button
                     onClick={() => setExpandedComments((prev) => {
