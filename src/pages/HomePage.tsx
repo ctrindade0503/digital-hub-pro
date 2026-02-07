@@ -73,7 +73,21 @@ const HomePage = () => {
   return (
     <div className="pb-32">
       <header className="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate("/profile")}
+        >
+          <Avatar className="w-8 h-8">
+            <AvatarImage src={profile?.avatar_url || undefined} />
+            <AvatarFallback className="text-xs bg-muted text-muted-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-medium text-foreground truncate max-w-[100px]">
+            {displayName}
+          </span>
+        </div>
+        <div className="flex-shrink-0">
           {appIconUrl ? (
             <img src={appIconUrl} alt="Ícone" className="w-10 h-10 rounded-full object-cover" />
           ) : (
@@ -81,20 +95,6 @@ const HomePage = () => {
               <span className="text-lg font-bold text-primary">M</span>
             </div>
           )}
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate("/profile")}
-          >
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="text-xs bg-muted text-muted-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium text-foreground truncate max-w-[120px]">
-              {displayName}
-            </span>
-          </div>
         </div>
         <button
           onClick={() => navigate("/notifications")}
