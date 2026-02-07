@@ -21,7 +21,6 @@ interface Profile {
 
 const CommunityPage = () => {
   const { user, isAdmin } = useAuth();
-  console.log("[CommunityPage] auth state:", { userId: user?.id, isAdmin, email: user?.email });
   const queryClient = useQueryClient();
   const [newPost, setNewPost] = useState("");
   const [simulateUser, setSimulateUser] = useState(false);
