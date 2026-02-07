@@ -25,7 +25,7 @@ const PdfViewerPage = () => {
         <h1 className="text-sm font-semibold text-foreground truncate flex-1">{title}</h1>
       </header>
       <iframe
-        src={url}
+        src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
         title={title}
         className="flex-1 w-full border-none"
         allow="fullscreen"
