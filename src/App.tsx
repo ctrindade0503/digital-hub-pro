@@ -2,13 +2,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import FeedPage from "./pages/FeedPage";
 import CommunityPage from "./pages/CommunityPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminBanners from "./pages/admin/AdminBanners";
+import AdminFeed from "./pages/admin/AdminFeed";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSettings from "./pages/admin/AdminSettings";
 import NotFound from "./pages/NotFound";
 import BottomNav from "./components/BottomNav";
 import WhatsAppFab from "./components/WhatsAppFab";
@@ -17,7 +24,9 @@ const queryClient = new QueryClient();
 
 const AppLayout = () => {
   const location = useLocation();
-  const showNav = location.pathname !== "/";
+  const isLogin = location.pathname === "/";
+  const isAdmin = location.pathname.startsWith("/admin");
+  const showNav = !isLogin && !isAdmin;
 
   return (
     <div className="max-w-lg mx-auto min-h-screen bg-background relative">
@@ -28,6 +37,14 @@ const AppLayout = () => {
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="/admin/products" replace />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="banners" element={<AdminBanners />} />
+          <Route path="feed" element={<AdminFeed />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
       {showNav && <WhatsAppFab />}
@@ -39,11 +56,13 @@ const AppLayout = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppLayout />
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

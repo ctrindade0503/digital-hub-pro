@@ -3,15 +3,37 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) navigate("/home", { replace: true });
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - goes to home
-    navigate("/home");
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + "/home" },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      setSent(true);
+      toast({ title: "Link enviado!", description: "Verifique seu e-mail para acessar." });
+    }
   };
 
   return (
@@ -38,36 +60,38 @@ const LoginPage = () => {
               Área de Membros
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Acesse sua conta
+              {sent ? "Verifique seu e-mail" : "Acesse sua conta"}
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder="Seu e-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 h-12 rounded-xl"
-                required
-              />
+          {sent ? (
+            <div className="text-center space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enviamos um link mágico para <strong>{email}</strong>. Clique no link do e-mail para entrar.
+              </p>
+              <Button variant="outline" onClick={() => setSent(false)} className="w-full h-12 rounded-xl">
+                Tentar outro e-mail
+              </Button>
             </div>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="Seu e-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-12 rounded-xl"
+                  required
+                />
+              </div>
 
-            <Button type="submit" className="w-full h-12 rounded-xl font-semibold text-base">
-              Entrar
-            </Button>
-          </form>
-
-          <p className="text-center mt-6">
-            <button
-              onClick={() => navigate("/home")}
-              className="text-sm text-primary font-medium hover:underline"
-            >
-              Criar conta
-            </button>
-          </p>
+              <Button type="submit" className="w-full h-12 rounded-xl font-semibold text-base" disabled={loading}>
+                {loading ? "Enviando..." : "Entrar"}
+              </Button>
+            </form>
+          )}
         </div>
       </div>
     </div>

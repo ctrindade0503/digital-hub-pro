@@ -1,11 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import { LogOut, ChevronRight } from "lucide-react";
+import { LogOut, ChevronRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { products } from "@/lib/mockData";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const purchasedProducts = products.filter((p) => p.purchased);
+  const { user, isAdmin, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <div className="pb-32 min-h-screen bg-background">
@@ -17,43 +22,35 @@ const ProfilePage = () => {
         {/* User info */}
         <div className="flex items-center gap-4 bg-card rounded-xl border border-border p-4">
           <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-            <span className="text-xl font-bold text-primary">U</span>
+            <span className="text-xl font-bold text-primary">
+              {(user?.email?.[0] || "U").toUpperCase()}
+            </span>
           </div>
           <div>
-            <h2 className="font-semibold text-card-foreground">Usuário</h2>
-            <p className="text-sm text-muted-foreground">usuario@email.com</p>
+            <h2 className="font-semibold text-card-foreground">
+              {user?.user_metadata?.name || user?.email?.split("@")[0] || "Usuário"}
+            </h2>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
         </div>
 
-        {/* Purchased products */}
-        <h3 className="text-sm font-semibold text-foreground mt-6 mb-3">
-          Meus Produtos ({purchasedProducts.length})
-        </h3>
-        <div className="space-y-2">
-          {purchasedProducts.map((product) => (
-            <button
-              key={product.id}
-              onClick={() => navigate(`/product/${product.id}`)}
-              className="flex items-center gap-3 w-full bg-card rounded-xl border border-border p-3 hover:shadow-sm transition-shadow"
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-12 h-12 rounded-lg object-cover"
-              />
-              <span className="text-sm font-medium text-card-foreground flex-1 text-left">
-                {product.name}
-              </span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
-          ))}
-        </div>
+        {/* Admin link */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="flex items-center gap-3 w-full bg-primary/5 rounded-xl border border-primary/20 p-4 mt-4 hover:bg-primary/10 transition-colors"
+          >
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="text-sm font-semibold text-primary flex-1 text-left">Painel Administrativo</span>
+            <ChevronRight className="w-4 h-4 text-primary" />
+          </button>
+        )}
 
         {/* Logout */}
         <Button
           variant="outline"
           className="w-full mt-8 h-12 rounded-xl gap-2 text-destructive border-destructive/30 hover:bg-destructive/5"
-          onClick={() => navigate("/")}
+          onClick={handleLogout}
         >
           <LogOut className="w-4 h-4" />
           Sair
