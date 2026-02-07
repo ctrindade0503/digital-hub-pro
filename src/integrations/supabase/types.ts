@@ -254,6 +254,7 @@ export type Database = {
           id: string
           image_url: string | null
           product_id: string
+          show_order: boolean
           sort_order: number
           title: string
         }
@@ -262,6 +263,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           product_id: string
+          show_order?: boolean
           sort_order?: number
           title: string
         }
@@ -270,6 +272,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           product_id?: string
+          show_order?: boolean
           sort_order?: number
           title?: string
         }

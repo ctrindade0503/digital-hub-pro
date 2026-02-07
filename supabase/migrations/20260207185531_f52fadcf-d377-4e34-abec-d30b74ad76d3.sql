@@ -1,0 +1,1 @@
+ALTER TABLE public.modules ADD COLUMN show_order boolean NOT NULL DEFAULT true;
