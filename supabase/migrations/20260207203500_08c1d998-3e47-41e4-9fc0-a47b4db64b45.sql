@@ -1,0 +1,3 @@
+ALTER TABLE public.community_posts
+  ADD COLUMN display_name text,
+  ADD COLUMN display_avatar_url text;
