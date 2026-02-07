@@ -41,8 +41,8 @@ const AdminLayout = () => {
       </header>
 
       {/* Nav tabs */}
-      <nav className="bg-card border-b border-border overflow-x-auto">
-        <div className="flex px-2">
+      <nav className="bg-card border-b border-border">
+        <div className="flex flex-wrap px-2">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.path);
             return (
