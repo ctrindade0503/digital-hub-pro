@@ -48,14 +48,18 @@ const CommentSection = ({ postId, userId, isAdmin, profileMap, requireApproval }
 
   const handleComment = async () => {
     if (!newComment.trim() || !userId) return;
-    const shouldApprove = requireApproval === true ? false : true;
-    await supabase.from("community_post_comments").insert({
+    // Admin comments are always auto-approved; for regular users, check the setting
+    const shouldApprove = isAdmin ? true : !requireApproval;
+    const { error } = await supabase.from("community_post_comments").insert({
       post_id: postId,
       user_id: userId,
       content: newComment.trim(),
       approved: shouldApprove,
     });
-    // Update comments_count
+    if (error) {
+      console.error("Error inserting comment:", error);
+      return;
+    }
     const currentCount = visibleComments.filter((c) => c.approved).length;
     await supabase.from("community_posts").update({
       comments_count: currentCount + (requireApproval ? 0 : 1),
