@@ -158,6 +158,8 @@ export type Database = {
           comments_count: number
           content: string
           created_at: string
+          display_avatar_url: string | null
+          display_name: string | null
           id: string
           image_url: string | null
           likes_count: number
@@ -167,6 +169,8 @@ export type Database = {
           comments_count?: number
           content: string
           created_at?: string
+          display_avatar_url?: string | null
+          display_name?: string | null
           id?: string
           image_url?: string | null
           likes_count?: number
@@ -176,6 +180,8 @@ export type Database = {
           comments_count?: number
           content?: string
           created_at?: string
+          display_avatar_url?: string | null
+          display_name?: string | null
           id?: string
           image_url?: string | null
           likes_count?: number

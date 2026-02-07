@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Send, ShieldCheck, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { Heart, MessageCircle, Send, ShieldCheck, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
@@ -21,9 +22,10 @@ const CommunityPage = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [newPost, setNewPost] = useState("");
-  const [postAsUserId, setPostAsUserId] = useState<string>("self");
+  const [simulateUser, setSimulateUser] = useState(false);
+  const [fakeName, setFakeName] = useState("");
+  const [fakeAvatar, setFakeAvatar] = useState("");
 
-  // Fetch all profiles for admin user selector & post display
   const { data: profiles } = useQuery({
     queryKey: ["community_profiles"],
     queryFn: async () => {
@@ -32,7 +34,6 @@ const CommunityPage = () => {
     },
   });
 
-  // Fetch admin user_ids
   const { data: adminIds } = useQuery({
     queryKey: ["admin_ids"],
     queryFn: async () => {
@@ -41,7 +42,6 @@ const CommunityPage = () => {
     },
   });
 
-  // Fetch posts
   const { data: posts, isLoading } = useQuery({
     queryKey: ["community_posts"],
     queryFn: async () => {
@@ -57,17 +57,23 @@ const CommunityPage = () => {
     acc[p.user_id] = p;
     return acc;
   }, {});
-
   const adminSet = new Set(adminIds || []);
 
   const handlePost = async () => {
     if (!newPost.trim() || !user) return;
-    const targetUserId = postAsUserId === "self" ? user.id : postAsUserId;
-    await supabase.from("community_posts").insert({
+    const insert: any = {
       content: newPost,
-      user_id: targetUserId,
-    });
+      user_id: user.id,
+    };
+    if (isAdmin && simulateUser && fakeName.trim()) {
+      insert.display_name = fakeName.trim();
+      insert.display_avatar_url = fakeAvatar.trim() || null;
+    }
+    await supabase.from("community_posts").insert(insert);
     setNewPost("");
+    setFakeName("");
+    setFakeAvatar("");
+    setSimulateUser(false);
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
 
@@ -79,7 +85,6 @@ const CommunityPage = () => {
       .eq("post_id", postId)
       .eq("user_id", user.id)
       .maybeSingle();
-
     if (existing) {
       await supabase.from("community_post_likes").delete().eq("id", existing.id);
       await supabase.from("community_posts").update({
@@ -94,14 +99,23 @@ const CommunityPage = () => {
     queryClient.invalidateQueries({ queryKey: ["community_posts"] });
   };
 
-  const getProfile = (userId: string) => profileMap[userId];
-  const getInitial = (userId: string) => {
-    const p = getProfile(userId);
-    return (p?.name?.[0] || p?.email?.[0] || "?").toUpperCase();
-  };
-  const getName = (userId: string) => {
-    const p = getProfile(userId);
-    return p?.name || p?.email || "Usuário";
+  const getPostDisplay = (post: any) => {
+    // If display_name is set, it's a simulated user post
+    if (post.display_name) {
+      return {
+        name: post.display_name,
+        avatar: post.display_avatar_url,
+        initial: post.display_name[0]?.toUpperCase() || "?",
+        isAdmin: false,
+      };
+    }
+    const p = profileMap[post.user_id];
+    return {
+      name: p?.name || p?.email || "Usuário",
+      avatar: p?.avatar_url,
+      initial: (p?.name?.[0] || p?.email?.[0] || "?").toUpperCase(),
+      isAdmin: adminSet.has(post.user_id),
+    };
   };
 
   return (
@@ -110,28 +124,31 @@ const CommunityPage = () => {
         <h1 className="text-lg font-bold text-foreground">Comunidade</h1>
       </header>
 
-      {/* New post input */}
+      {/* New post */}
       <div className="px-4 mt-4 space-y-2">
         {isAdmin && (
-          <Select value={postAsUserId} onValueChange={setPostAsUserId}>
-            <SelectTrigger className="h-9 text-xs">
-              <SelectValue placeholder="Postar como..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="self">
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3 h-3 text-primary" /> Postar como Admin
-                </span>
-              </SelectItem>
-              {(profiles || [])
-                .filter((p) => p.user_id !== user?.id)
-                .map((p) => (
-                  <SelectItem key={p.user_id} value={p.user_id}>
-                    {p.name || p.email || p.user_id.slice(0, 8)}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
+          <div className="bg-card rounded-xl border border-border p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">Simular usuário</Label>
+              <Switch checked={simulateUser} onCheckedChange={setSimulateUser} />
+            </div>
+            {simulateUser && (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Nome do usuário fictício"
+                  value={fakeName}
+                  onChange={(e) => setFakeName(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <Input
+                  placeholder="URL da foto de perfil (opcional)"
+                  value={fakeAvatar}
+                  onChange={(e) => setFakeAvatar(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+            )}
+          </div>
         )}
         <div className="flex gap-2">
           <Input
@@ -153,26 +170,20 @@ const CommunityPage = () => {
           <div className="text-center text-muted-foreground py-8">Carregando...</div>
         ) : (
           (posts || []).map((post) => {
-            const profile = getProfile(post.user_id);
-            const isPostAdmin = adminSet.has(post.user_id);
+            const display = getPostDisplay(post);
             return (
-              <article
-                key={post.id}
-                className="bg-card rounded-xl border border-border p-4 shadow-sm"
-              >
+              <article key={post.id} className="bg-card rounded-xl border border-border p-4 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="w-10 h-10">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarImage src={display.avatar || undefined} />
                     <AvatarFallback className="bg-secondary text-secondary-foreground text-sm font-semibold">
-                      {getInitial(post.user_id)}
+                      {display.initial}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-semibold text-card-foreground">
-                        {getName(post.user_id)}
-                      </p>
-                      {isPostAdmin && (
+                      <p className="text-sm font-semibold text-card-foreground">{display.name}</p>
+                      {display.isAdmin && (
                         <span className="flex items-center gap-0.5 text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                           <ShieldCheck className="w-3 h-3" /> Admin
                         </span>
