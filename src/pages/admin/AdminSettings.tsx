@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Download } from "lucide-react";
 
 const AdminSettings = () => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
@@ -15,6 +15,7 @@ const AdminSettings = () => {
   const [loginImageUrl, setLoginImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadingLogin, setUploadingLogin] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loginFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -78,6 +79,41 @@ const AdminSettings = () => {
     await supabase.from("app_settings").update({ value: appIconUrl }).eq("key", "app_icon_url");
     await supabase.from("app_settings").update({ value: loginImageUrl }).eq("key", "login_image_url");
     toast({ title: "Configurações salvas" });
+  };
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Não autenticado");
+
+      const res = await supabase.functions.invoke("export-csv", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.error) throw res.error;
+      const tables = res.data as Record<string, string>;
+
+      // Download each table as a separate CSV file
+      for (const [tableName, csvContent] of Object.entries(tables)) {
+        if (!csvContent || csvContent.startsWith("Error:")) continue;
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${tableName}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toast({ title: "Exportação concluída", description: "Os arquivos CSV foram baixados." });
+    } catch (err: any) {
+      console.error("Export error:", err);
+      toast({ title: "Erro na exportação", description: err.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
@@ -154,6 +190,16 @@ const AdminSettings = () => {
           <Switch checked={requireCommentApproval} onCheckedChange={setRequireCommentApproval} />
         </div>
         <Button onClick={save} className="w-full">Salvar Configurações</Button>
+
+        {/* Export CSV */}
+        <div className="border-t border-border pt-4">
+          <label className="text-sm font-medium text-foreground">Exportar Dados</label>
+          <p className="text-xs text-muted-foreground mb-2">Exportar todas as tabelas do banco de dados em CSV</p>
+          <Button variant="outline" onClick={handleExportCsv} disabled={exporting} className="w-full gap-2">
+            <Download className="w-4 h-4" />
+            {exporting ? "Exportando..." : "Exportar CSV"}
+          </Button>
+        </div>
       </div>
     </div>
   );
