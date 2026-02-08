@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, Download } from "lucide-react";
+import { Upload, X, Download, Copy, Code } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const AdminSettings = () => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
@@ -16,6 +17,8 @@ const AdminSettings = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadingLogin, setUploadingLogin] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [schemaSql, setSchemaSql] = useState("");
+  const [loadingSchema, setLoadingSchema] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const loginFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -116,6 +119,33 @@ const AdminSettings = () => {
     }
   };
 
+  const handleLoadSchema = async () => {
+    setLoadingSchema(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error("Não autenticado");
+
+      const res = await supabase.functions.invoke("export-schema", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.error) throw res.error;
+      setSchemaSql(res.data?.sql || "Nenhum schema encontrado.");
+      toast({ title: "Schema carregado" });
+    } catch (err: any) {
+      console.error("Schema error:", err);
+      toast({ title: "Erro ao carregar schema", description: err.message, variant: "destructive" });
+    } finally {
+      setLoadingSchema(false);
+    }
+  };
+
+  const handleCopySchema = () => {
+    navigator.clipboard.writeText(schemaSql);
+    toast({ title: "SQL copiado para a área de transferência" });
+  };
+
   return (
     <div>
       <h2 className="text-lg font-bold text-foreground mb-4">Configurações</h2>
@@ -199,6 +229,29 @@ const AdminSettings = () => {
             <Download className="w-4 h-4" />
             {exporting ? "Exportando..." : "Exportar CSV"}
           </Button>
+        </div>
+
+        {/* Schema SQL */}
+        <div className="border-t border-border pt-4">
+          <label className="text-sm font-medium text-foreground">SQL das Tabelas</label>
+          <p className="text-xs text-muted-foreground mb-2">Gere o SQL de criação de todas as tabelas para migração</p>
+          <Button variant="outline" onClick={handleLoadSchema} disabled={loadingSchema} className="w-full gap-2 mb-3">
+            <Code className="w-4 h-4" />
+            {loadingSchema ? "Carregando..." : "Gerar SQL"}
+          </Button>
+          {schemaSql && (
+            <div className="space-y-2">
+              <Textarea
+                value={schemaSql}
+                readOnly
+                className="font-mono text-xs min-h-[200px] max-h-[400px] bg-muted"
+              />
+              <Button variant="outline" size="sm" onClick={handleCopySchema} className="w-full gap-2">
+                <Copy className="w-4 h-4" />
+                Copiar SQL
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
